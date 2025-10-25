@@ -627,6 +627,100 @@ bundle exec fastlane firebase_qa increment_version:true release_notes:"RC 1.0.0"
 
 **Best for:** Pre-release QA validation before submitting to Play Store
 
+### Version Management Lanes
+
+#### `version_info`
+Display current version information.
+
+```bash
+bundle exec fastlane version_info
+```
+
+**Output:**
+```
+📱 Current Version Information
+Version Name: 1.0.0
+Version Code: 1
+Full Version: 1.0.0 (1)
+```
+
+#### `bump_version_code`
+Increment version code by 1.
+
+```bash
+bundle exec fastlane bump_version_code
+```
+
+**What it does:**
+- Reads current version code from `app/build.gradle.kts`
+- Increments by 1
+- Writes back to file
+- Output: `✅ Version code bumped: 1 → 2`
+
+#### `bump_version_name`
+Increment version name (patch, minor, or major).
+
+```bash
+# Bump patch version (1.0.0 → 1.0.1)
+bundle exec fastlane bump_version_name type:patch
+
+# Bump minor version (1.0.0 → 1.1.0)
+bundle exec fastlane bump_version_name type:minor
+
+# Bump major version (1.0.0 → 2.0.0)
+bundle exec fastlane bump_version_name type:major
+```
+
+**What it does:**
+- Follows semantic versioning (SemVer)
+- `patch`: Bug fixes and minor changes
+- `minor`: New features, backward compatible
+- `major`: Breaking changes
+
+#### `bump_version`
+Automatically increment both version name and code (recommended).
+
+```bash
+# Bump patch + code (1.0.0/1 → 1.0.1/2)
+bundle exec fastlane bump_version type:patch
+
+# Bump minor + code (1.0.0/1 → 1.1.0/2)
+bundle exec fastlane bump_version type:minor
+
+# Bump major + code (1.0.0/1 → 2.0.0/2)
+bundle exec fastlane bump_version type:major
+```
+
+**What it does:**
+1. Increments version name based on type
+2. Increments version code by 1
+3. Updates `app/build.gradle.kts`
+
+**Best for:** Release workflows where both values should change
+
+#### `set_version_code`
+Set version code to a specific value.
+
+```bash
+bundle exec fastlane set_version_code code:42
+```
+
+#### `set_version_name`
+Set version name to a specific value.
+
+```bash
+bundle exec fastlane set_version_name name:2.0.0
+```
+
+#### `set_version`
+Set both version name and code simultaneously.
+
+```bash
+bundle exec fastlane set_version name:2.0.0 code:42
+```
+
+**Use case:** Setting specific versions for releases, hotfixes, or synchronizing with backend APIs
+
 ---
 
 ## App Signing Setup
@@ -824,29 +918,91 @@ jobs:
 
 ### 6. Versioning Strategy
 
-**Option A: Manual Versioning**
-Update version in `app/build.gradle.kts` manually before deployment.
+The project includes the `fastlane-plugin-versioning_android` plugin for advanced version management. You have several options for managing versions:
 
-**Option B: Automatic Versioning**
-Use the `increment_version:true` parameter:
+**Option A: Using Dedicated Version Lanes (Recommended)**
 
 ```bash
+# Display current version
+bundle exec fastlane version_info
+
+# Bump version name (patch: 1.0.0 → 1.0.1)
+bundle exec fastlane bump_version_name type:patch
+
+# Bump version name (minor: 1.0.1 → 1.1.0)
+bundle exec fastlane bump_version_name type:minor
+
+# Bump version name (major: 1.1.0 → 2.0.0)
+bundle exec fastlane bump_version_name type:major
+
+# Bump version code (1 → 2)
+bundle exec fastlane bump_version_code
+
+# Bump both version name and code (recommended for releases)
+bundle exec fastlane bump_version type:patch  # Bumps patch + code
+bundle exec fastlane bump_version type:minor  # Bumps minor + code
+bundle exec fastlane bump_version type:major  # Bumps major + code
+
+# Set specific version
+bundle exec fastlane set_version_name name:2.0.0
+bundle exec fastlane set_version_code code:42
+bundle exec fastlane set_version name:2.0.0 code:42
+```
+
+**Version Bump Types Explained:**
+- **patch** (1.0.0 → 1.0.1): Bug fixes, minor changes
+- **minor** (1.0.0 → 1.1.0): New features, backward compatible
+- **major** (1.0.0 → 2.0.0): Breaking changes, major updates
+
+**Option B: Inline Version Increment**
+
+Use the `increment_version:true` parameter with build/deploy lanes:
+
+```bash
+# Build with automatic version code increment
 bundle exec fastlane build_aab increment_version:true
+
+# Deploy with automatic version increment
+bundle exec fastlane deploy_internal increment_version:true
 ```
 
-**Option C: Advanced Versioning**
-Install versioning plugin:
+**Option C: Manual Versioning**
 
-```ruby
-# Add to Gemfile
-gem "fastlane-plugin-versioning_android"
+Edit `app/build.gradle.kts` directly:
+
+```kotlin
+android {
+    defaultConfig {
+        versionCode = 2
+        versionName = "1.0.1"
+    }
+}
 ```
 
-Use in Fastfile:
+**Recommended Workflow:**
 
-```ruby
-android_set_version_name(version_name: "2.0.0")
-android_set_version_code(version_code: 20)
+1. **Feature Releases**: Use `bump_version type:minor`
+2. **Bug Fixes**: Use `bump_version type:patch`
+3. **Major Updates**: Use `bump_version type:major`
+4. **Hotfixes**: Use `bump_version_code` only
+
+**Example Release Workflow:**
+
+```bash
+# 1. Check current version
+bundle exec fastlane version_info
+# Output: Version Name: 1.0.0, Version Code: 1
+
+# 2. Bump version for new feature release
+bundle exec fastlane bump_version type:minor
+# Output: Name: 1.0.0 → 1.1.0, Code: 1 → 2
+
+# 3. Build and deploy
+bundle exec fastlane deploy_beta
+
+# 4. Verify version was updated
+bundle exec fastlane version_info
+# Output: Version Name: 1.1.0, Version Code: 2
 ```
 
 ### 7. Monitoring and Notifications

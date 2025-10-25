@@ -402,26 +402,168 @@ platform :android do
   end
 
   # ========================================
+  # VERSION MANAGEMENT LANES
+  # ========================================
+
+  desc "Display current version information"
+  lane :version_info do
+    version_name = android_get_version_name(gradle_file: "app/build.gradle.kts")
+    version_code = android_get_version_code(gradle_file: "app/build.gradle.kts")
+
+    UI.header("📱 Current Version Information")
+    UI.success("Version Name: #{version_name}")
+    UI.success("Version Code: #{version_code}")
+    UI.message("Full Version: #{version_name} (#{version_code})")
+  end
+
+  desc "Increment version code by 1"
+  lane :bump_version_code do |options|
+    current_code = android_get_version_code(gradle_file: "app/build.gradle.kts")
+    new_code = android_set_version_code(
+      version_code: current_code + 1,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.success("✅ Version code bumped: #{current_code} → #{new_code}")
+  end
+
+  desc "Set version code to a specific value"
+  lane :set_version_code do |options|
+    unless options[:code]
+      UI.user_error!("❌ Please provide a version code. Usage: fastlane set_version_code code:42")
+    end
+
+    new_code = android_set_version_code(
+      version_code: options[:code].to_i,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.success("✅ Version code set to: #{new_code}")
+  end
+
+  desc "Increment version name (major, minor, or patch)"
+  lane :bump_version_name do |options|
+    current_name = android_get_version_name(gradle_file: "app/build.gradle.kts")
+    bump_type = options[:type] || "patch"
+
+    # Parse current version
+    version_parts = current_name.split('.').map(&:to_i)
+    major = version_parts[0] || 0
+    minor = version_parts[1] || 0
+    patch = version_parts[2] || 0
+
+    # Bump based on type
+    case bump_type
+    when "major"
+      major += 1
+      minor = 0
+      patch = 0
+    when "minor"
+      minor += 1
+      patch = 0
+    when "patch"
+      patch += 1
+    else
+      UI.user_error!("❌ Invalid bump type. Use: major, minor, or patch")
+    end
+
+    new_name = "#{major}.#{minor}.#{patch}"
+    android_set_version_name(
+      version_name: new_name,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.success("✅ Version name bumped (#{bump_type}): #{current_name} → #{new_name}")
+  end
+
+  desc "Set version name to a specific value"
+  lane :set_version_name do |options|
+    unless options[:name]
+      UI.user_error!("❌ Please provide a version name. Usage: fastlane set_version_name name:1.2.3")
+    end
+
+    new_name = android_set_version_name(
+      version_name: options[:name],
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.success("✅ Version name set to: #{new_name}")
+  end
+
+  desc "Set both version name and code"
+  lane :set_version do |options|
+    unless options[:name] && options[:code]
+      UI.user_error!("❌ Please provide both name and code. Usage: fastlane set_version name:1.2.3 code:42")
+    end
+
+    android_set_version_name(
+      version_name: options[:name],
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    android_set_version_code(
+      version_code: options[:code].to_i,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.success("✅ Version set to: #{options[:name]} (#{options[:code]})")
+  end
+
+  desc "Automatically increment both version name (patch) and version code"
+  lane :bump_version do |options|
+    bump_type = options[:type] || "patch"
+
+    # Increment version name
+    current_name = android_get_version_name(gradle_file: "app/build.gradle.kts")
+    version_parts = current_name.split('.').map(&:to_i)
+    major = version_parts[0] || 0
+    minor = version_parts[1] || 0
+    patch = version_parts[2] || 0
+
+    case bump_type
+    when "major"
+      major += 1
+      minor = 0
+      patch = 0
+    when "minor"
+      minor += 1
+      patch = 0
+    when "patch"
+      patch += 1
+    end
+
+    new_name = "#{major}.#{minor}.#{patch}"
+    android_set_version_name(
+      version_name: new_name,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    # Increment version code
+    current_code = android_get_version_code(gradle_file: "app/build.gradle.kts")
+    new_code = android_set_version_code(
+      version_code: current_code + 1,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.success("✅ Version bumped (#{bump_type}):")
+    UI.message("   Name: #{current_name} → #{new_name}")
+    UI.message("   Code: #{current_code} → #{new_code}")
+  end
+
+  # ========================================
   # HELPER FUNCTIONS
   # ========================================
 
-  # Increment version code in build.gradle.kts
+  # Legacy increment function (kept for backward compatibility)
+  # Prefer using bump_version_code lane instead
   private_lane :increment_version_code_in_project_gradle do
-    # Read the current build.gradle.kts
-    build_gradle_path = "../app/build.gradle.kts"
-    gradle_file = File.read(build_gradle_path)
+    current_code = android_get_version_code(gradle_file: "app/build.gradle.kts")
+    new_code = android_set_version_code(
+      version_code: current_code + 1,
+      gradle_file: "app/build.gradle.kts"
+    )
 
-    # Extract current version code
-    version_code = gradle_file.match(/versionCode\s*=\s*(\d+)/)[1].to_i
-    new_version_code = version_code + 1
-
-    # Replace version code
-    gradle_file.gsub!(/versionCode\s*=\s*\d+/, "versionCode = #{new_version_code}")
-
-    # Write back to file
-    File.write(build_gradle_path, gradle_file)
-
-    UI.message("📱 Version code incremented: #{version_code} → #{new_version_code}")
+    UI.message("📱 Version code incremented: #{current_code} → #{new_code}")
   end
 
   # Error handling for all lanes

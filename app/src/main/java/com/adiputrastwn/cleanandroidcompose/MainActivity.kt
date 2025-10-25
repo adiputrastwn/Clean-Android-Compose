@@ -12,10 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.adiputrastwn.cleanandroidcompose.ui.theme.CleanandroidcomposeTheme
+import timber.log.Timber
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Timber.d("MainActivity onCreate started")
         enableEdgeToEdge()
         setContent {
             CleanandroidcomposeTheme {
@@ -27,6 +29,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        Timber.i("MainActivity UI setup completed")
     }
 }
 

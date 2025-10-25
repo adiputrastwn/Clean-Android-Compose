@@ -1,8 +1,10 @@
 package com.adiputrastwn.cleanandroidcompose
 
 import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
+@HiltAndroidApp
 class CleanAndroidComposeApp : Application() {
 
     override fun onCreate() {

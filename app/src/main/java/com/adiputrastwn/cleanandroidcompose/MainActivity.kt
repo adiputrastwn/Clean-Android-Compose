@@ -16,8 +16,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.adiputrastwn.cleanandroidcompose.samples.MemoryLeakDemoActivity
 import com.adiputrastwn.cleanandroidcompose.ui.theme.CleanAndroidComposeTheme
+import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

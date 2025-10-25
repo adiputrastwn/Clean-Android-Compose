@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.adiputrastwn.cleanandroidcompose.ui.theme.CleanAndroidComposeTheme
+import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
 /**
@@ -30,6 +31,7 @@ import timber.log.Timber
  * 4. Press back to finish activity
  * 5. Wait for LeakCanary notification
  */
+@AndroidEntryPoint
 class MemoryLeakDemoActivity : ComponentActivity() {
 
     private val viewModel: LeakyViewModel by viewModels()

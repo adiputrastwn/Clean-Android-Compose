@@ -8,10 +8,11 @@ This guide provides comprehensive instructions for integrating Fastlane into you
 2. [Project Initialization](#project-initialization)
 3. [Core Configuration Files](#core-configuration-files)
 4. [Google Play Console Integration](#google-play-console-integration)
-5. [Available Lanes](#available-lanes)
-6. [App Signing Setup](#app-signing-setup)
-7. [Best Practices](#best-practices)
-8. [Troubleshooting](#troubleshooting)
+5. [Firebase App Distribution Integration](#firebase-app-distribution-integration)
+6. [Available Lanes](#available-lanes)
+7. [App Signing Setup](#app-signing-setup)
+8. [Best Practices](#best-practices)
+9. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -254,6 +255,130 @@ bundle exec fastlane run validate_play_store_json_key json_key:/path/to/google-p
 
 ---
 
+## Firebase App Distribution Integration
+
+Firebase App Distribution is a great alternative to Google Play Console for distributing builds to testers. It's faster to set up and provides an excellent testing workflow.
+
+### Step 1: Create a Firebase Project
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Click **Add project** (or select an existing project)
+3. Follow the setup wizard
+4. Once created, select your project
+
+### Step 2: Add Your Android App to Firebase
+
+1. In Firebase Console, click the **Android icon** to add an Android app
+2. Fill in the registration form:
+   - **Package name:** `com.adiputrastwn.cleanandroidcompose`
+   - **App nickname:** (optional) e.g., "Clean Android Compose"
+   - **Debug signing certificate SHA-1:** (optional, for now)
+3. Click **Register app**
+4. Download `google-services.json` (you can skip this if not using other Firebase features)
+5. Click **Continue** and **Finish**
+
+### Step 3: Get Your Firebase App ID
+
+1. In Firebase Console, go to **Project Settings** (gear icon)
+2. Scroll down to **Your apps** section
+3. Find your Android app and copy the **App ID**
+   - Format: `1:123456789:android:abcdef123456`
+4. Save this - you'll need it for the `.env` file
+
+### Step 4: Enable App Distribution
+
+1. In Firebase Console sidebar, navigate to **App Distribution**
+2. Click **Get started** if prompted
+3. Accept the terms
+
+### Step 5: Create Tester Groups
+
+1. In **App Distribution**, go to **Testers & Groups** tab
+2. Click **Add group**
+3. Create groups for different testing purposes:
+   - `qa-team` - Your QA engineers
+   - `developers` - Development team
+   - `beta-testers` - External beta testers
+4. Add testers by email to each group
+
+### Step 6: Create a Service Account for Fastlane
+
+1. In Firebase Console, go to **Project Settings** → **Service Accounts**
+2. Click **Generate new private key**
+3. Confirm by clicking **Generate key**
+4. A JSON file will download - save it securely (e.g., `firebase-service-account.json`)
+
+**IMPORTANT:** Store this file securely and NEVER commit it to version control!
+
+### Step 7: Configure Fastlane
+
+Add the following to `fastlane/.env`:
+
+```bash
+# Firebase App ID (from Step 3)
+FIREBASE_APP_ID="1:123456789:android:abcdef123456"
+
+# Path to Firebase service account JSON
+FIREBASE_SERVICE_CREDENTIALS_FILE="/Users/yourname/secrets/firebase-service-account.json"
+
+# Tester groups (comma-separated)
+FIREBASE_GROUPS="qa-team,developers"
+
+# Individual testers (optional, comma-separated emails)
+FIREBASE_TESTERS="tester1@example.com,tester2@example.com"
+
+# Default release notes
+FIREBASE_RELEASE_NOTES="New build from Fastlane"
+```
+
+### Step 8: Install the Firebase Plugin
+
+The plugin is already added to your `Gemfile`. Install it:
+
+```bash
+bundle install
+```
+
+### Step 9: Verify Setup
+
+Test the Firebase distribution:
+
+```bash
+# Distribute a debug build to testers
+bundle exec fastlane firebase_debug release_notes:"Testing Firebase integration"
+```
+
+### Firebase App Distribution vs Google Play Console
+
+| Feature | Firebase App Distribution | Google Play Console |
+|---------|--------------------------|---------------------|
+| **Setup Speed** | Fast (minutes) | Slower (requires app creation, review) |
+| **Distribution Speed** | Instant | Can take hours for processing |
+| **Tester Limit** | Unlimited | Limited by track |
+| **Release Notes** | Supports markdown | Plain text |
+| **Best For** | Internal testing, QA, beta | Official releases, production |
+| **Cost** | Free | Free (with Play Console account) |
+| **Installation** | Direct APK/AAB install | Via Play Store app |
+
+### Recommended Workflow
+
+1. **Development/QA Testing:** Use Firebase App Distribution
+   - Fast distribution
+   - Easy tester management
+   - Instant feedback loop
+
+2. **Beta Testing:** Use Google Play Beta track
+   - Larger audience
+   - Production-like environment
+   - Phased rollout capabilities
+
+3. **Production:** Use Google Play Production track
+   - Official release
+   - Maximum reach
+   - Store listing and discovery
+
+---
+
 ## Available Lanes
 
 All lanes are defined in `fastlane/Fastfile`. Run any lane with:
@@ -421,6 +546,86 @@ bundle exec fastlane ci
 3. Builds both APK and AAB
 
 **Use case:** Perfect for CI/CD pipelines (GitHub Actions, Jenkins, etc.)
+
+### Firebase App Distribution Lanes
+
+#### `firebase_debug`
+Distribute debug APK to Firebase App Distribution.
+
+```bash
+# Basic distribution
+bundle exec fastlane firebase_debug
+
+# With custom release notes
+bundle exec fastlane firebase_debug release_notes:"Fixed login bug"
+```
+
+**What it does:**
+1. Builds debug APK
+2. Uploads to Firebase App Distribution
+3. Notifies testers via email
+
+**Prerequisites:**
+- Firebase project configured
+- `FIREBASE_APP_ID` and `FIREBASE_SERVICE_CREDENTIALS_FILE` set in `fastlane/.env`
+- Tester groups created in Firebase Console
+
+**Best for:** Quick QA testing with debug symbols
+
+#### `firebase_release`
+Distribute release APK to Firebase App Distribution.
+
+```bash
+# Basic distribution
+bundle exec fastlane firebase_release
+
+# With version increment and custom notes
+bundle exec fastlane firebase_release increment_version:true release_notes:"Version 1.2.0 - New features"
+```
+
+**What it does:**
+1. Builds release APK (with optional version increment)
+2. Uploads to Firebase App Distribution
+3. Notifies testers
+
+**Best for:** Beta testing with release builds
+
+#### `firebase_aab`
+Distribute release AAB to Firebase App Distribution.
+
+```bash
+# Basic distribution
+bundle exec fastlane firebase_aab
+
+# With version increment
+bundle exec fastlane firebase_aab increment_version:true
+```
+
+**What it does:**
+1. Builds release AAB (with optional version increment)
+2. Uploads to Firebase App Distribution
+3. Notifies testers
+
+**Note:** AAB requires Android 5.0+ and is the preferred format for Google Play
+
+#### `firebase_qa`
+Distribute to Firebase with full QA checks.
+
+```bash
+# Run all checks before distribution
+bundle exec fastlane firebase_qa
+
+# With custom options
+bundle exec fastlane firebase_qa increment_version:true release_notes:"RC 1.0.0"
+```
+
+**What it does:**
+1. Runs code quality checks (lint + detekt)
+2. Runs all unit tests
+3. Builds release APK
+4. Distributes to Firebase
+
+**Best for:** Pre-release QA validation before submitting to Play Store
 
 ---
 

@@ -9,7 +9,9 @@ source "https://rubygems.org"
 # Version pinned to ensure consistency across environments
 gem "fastlane", "~> 2.219.0"
 
-# Plugins (uncomment as needed)
-# gem "fastlane-plugin-firebase_app_distribution"  # For Firebase App Distribution
+# Plugins
+gem "fastlane-plugin-firebase_app_distribution"  # For Firebase App Distribution
+
+# Additional plugins (uncomment as needed)
 # gem "fastlane-plugin-versioning_android"         # For advanced version management
 # gem "fastlane-plugin-badge"                      # For adding badges to app icons

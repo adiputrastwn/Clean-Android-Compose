@@ -306,6 +306,102 @@ platform :android do
   end
 
   # ========================================
+  # FIREBASE APP DISTRIBUTION LANES
+  # ========================================
+
+  desc "Distribute debug APK to Firebase App Distribution"
+  lane :firebase_debug do |options|
+    # Build debug APK
+    gradle(
+      task: "assemble",
+      build_type: "Debug",
+      print_command: true
+    )
+
+    # Get release notes
+    release_notes = options[:release_notes] || ENV["FIREBASE_RELEASE_NOTES"] || "New debug build from Fastlane"
+
+    # Distribute to Firebase
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      service_credentials_file: ENV["FIREBASE_SERVICE_CREDENTIALS_FILE"],
+      groups: ENV["FIREBASE_GROUPS"],
+      testers: ENV["FIREBASE_TESTERS"],
+      release_notes: release_notes,
+      apk_path: "app/build/outputs/apk/debug/app-debug.apk",
+      android_artifact_type: "APK"
+    )
+
+    UI.success("✅ Debug APK distributed to Firebase App Distribution!")
+    UI.message("🔗 Testers will receive an email notification")
+  end
+
+  desc "Distribute release APK to Firebase App Distribution"
+  lane :firebase_release do |options|
+    # Build release APK with optional version increment
+    build_apk(increment_version: options[:increment_version])
+
+    # Get release notes
+    release_notes = options[:release_notes] || ENV["FIREBASE_RELEASE_NOTES"] || "New release build from Fastlane"
+
+    # Distribute to Firebase
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      service_credentials_file: ENV["FIREBASE_SERVICE_CREDENTIALS_FILE"],
+      groups: ENV["FIREBASE_GROUPS"],
+      testers: ENV["FIREBASE_TESTERS"],
+      release_notes: release_notes,
+      apk_path: "app/build/outputs/apk/release/app-release.apk",
+      android_artifact_type: "APK"
+    )
+
+    UI.success("✅ Release APK distributed to Firebase App Distribution!")
+    UI.message("🔗 Testers will receive an email notification")
+  end
+
+  desc "Distribute release AAB to Firebase App Distribution"
+  lane :firebase_aab do |options|
+    # Build release AAB with optional version increment
+    build_aab(increment_version: options[:increment_version])
+
+    # Get release notes
+    release_notes = options[:release_notes] || ENV["FIREBASE_RELEASE_NOTES"] || "New release AAB from Fastlane"
+
+    # Distribute to Firebase
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      service_credentials_file: ENV["FIREBASE_SERVICE_CREDENTIALS_FILE"],
+      groups: ENV["FIREBASE_GROUPS"],
+      testers: ENV["FIREBASE_TESTERS"],
+      release_notes: release_notes,
+      android_artifact_path: "app/build/outputs/bundle/release/app-release.aab",
+      android_artifact_type: "AAB"
+    )
+
+    UI.success("✅ Release AAB distributed to Firebase App Distribution!")
+    UI.message("🔗 Testers will receive an email notification")
+  end
+
+  desc "Distribute to Firebase with QA checks"
+  lane :firebase_qa do |options|
+    UI.header("Running QA checks before Firebase distribution")
+
+    # Run code quality checks
+    code_quality
+
+    # Run tests
+    test
+
+    # Distribute release APK
+    firebase_release(
+      increment_version: options[:increment_version],
+      release_notes: options[:release_notes]
+    )
+
+    UI.success("✅ QA checks passed and distributed to Firebase!")
+  end
+
+  # ========================================
   # HELPER FUNCTIONS
   # ========================================
 

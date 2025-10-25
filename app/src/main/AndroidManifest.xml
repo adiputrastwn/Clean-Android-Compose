@@ -23,6 +23,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".samples.MemoryLeakDemoActivity"
+            android:exported="false"
+            android:label="Memory Leak Demo"
+            android:theme="@style/Theme.Cleanandroidcompose" />
     </application>
 
 </manifest>

@@ -1,0 +1,581 @@
+# Fastfile - Defines automation lanes for your Android project
+# This file contains all the lanes (workflows) you can run with Fastlane
+# Run `fastlane <lane_name>` to execute a specific lane
+# Run `fastlane lanes` to list all available lanes
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:android)
+
+platform :android do
+  # ========================================
+  # DESCRIPTION BLOCK
+  # ========================================
+  # This block provides descriptions for lanes when running `fastlane lanes`
+
+  desc "Runs all the tests"
+  lane :test do
+    # Run unit tests for the debug variant
+    # You can customize the variant by changing testDebugUnitTest to testReleaseUnitTest
+    gradle(
+      task: "test",
+      build_type: "DebugUnitTest",
+      print_command: true,
+      print_command_output: true
+    )
+
+    UI.success("✅ All tests passed successfully!")
+  end
+
+  # ========================================
+  # LINT LANE
+  # ========================================
+  desc "Runs Android lint checks"
+  lane :lint do
+    # Run lint analysis on the debug variant
+    # This helps catch potential bugs, performance issues, and code style violations
+    gradle(
+      task: "lint",
+      build_type: "Debug",
+      print_command: true,
+      print_command_output: true
+    )
+
+    UI.success("✅ Lint checks completed successfully!")
+    UI.message("📊 Check the lint report at: app/build/reports/lint-results-debug.html")
+  end
+
+  # ========================================
+  # DETEKT LANE (for your existing Detekt integration)
+  # ========================================
+  desc "Runs Detekt static code analysis"
+  lane :detekt do
+    # Run Detekt analysis using your existing configuration
+    gradle(
+      task: "detektAll",
+      print_command: true,
+      print_command_output: true
+    )
+
+    UI.success("✅ Detekt analysis completed successfully!")
+  end
+
+  # ========================================
+  # CODE QUALITY LANE (runs both lint and detekt)
+  # ========================================
+  desc "Runs all code quality checks (lint + detekt)"
+  lane :code_quality do
+    UI.header("Running code quality checks")
+
+    # Run lint
+    lint
+
+    # Run detekt
+    detekt
+
+    UI.success("✅ All code quality checks passed!")
+  end
+
+  # ========================================
+  # BUILD AAB LANE
+  # ========================================
+  desc "Build a release Android App Bundle (AAB)"
+  lane :build_aab do |options|
+    # Increment version code if requested
+    # Usage: fastlane build_aab increment_version:true
+    if options[:increment_version]
+      increment_version_code_in_project_gradle
+    end
+
+    # Clean the project before building
+    gradle(
+      task: "clean",
+      print_command: true
+    )
+
+    # Build the release AAB
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      print_command: true,
+      print_command_output: true,
+      properties: {
+        # Uncomment and configure these if you have signing configured
+        # "android.injected.signing.store.file" => ENV["KEYSTORE_PATH"],
+        # "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
+        # "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
+        # "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
+      }
+    )
+
+    UI.success("✅ AAB built successfully!")
+    UI.message("📦 AAB location: app/build/outputs/bundle/release/app-release.aab")
+  end
+
+  # ========================================
+  # BUILD APK LANE
+  # ========================================
+  desc "Build a release APK"
+  lane :build_apk do |options|
+    # Increment version code if requested
+    if options[:increment_version]
+      increment_version_code_in_project_gradle
+    end
+
+    # Clean the project before building
+    gradle(
+      task: "clean",
+      print_command: true
+    )
+
+    # Build the release APK
+    gradle(
+      task: "assemble",
+      build_type: "Release",
+      print_command: true,
+      print_command_output: true
+    )
+
+    UI.success("✅ APK built successfully!")
+    UI.message("📦 APK location: app/build/outputs/apk/release/app-release.apk")
+  end
+
+  # ========================================
+  # DEPLOY TO INTERNAL TESTING LANE
+  # ========================================
+  desc "Deploy AAB to Google Play Console - Internal Testing Track"
+  lane :deploy_internal do |options|
+    # Ensure we have a fresh AAB
+    build_aab(increment_version: options[:increment_version])
+
+    # Upload to Google Play Console
+    upload_to_play_store(
+      # The track to upload to (internal, alpha, beta, production)
+      track: 'internal',
+
+      # Path to the AAB file
+      aab: 'app/build/outputs/bundle/release/app-release.aab',
+
+      # Skip uploading metadata, images, and screenshots
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+
+      # Skip the APK upload (we're uploading AAB)
+      skip_upload_apk: true,
+
+      # Release status (draft, completed, halted, inProgress)
+      release_status: 'completed',
+
+      # Rollout percentage (for gradual rollout, default is 100%)
+      # rollout: '0.1',  # 10% rollout
+
+      # Version code to replace (for updating existing version)
+      # version_code_override: '123',
+
+      # JSON key file path (from environment variable)
+      json_key: ENV["GOOGLE_PLAY_JSON_KEY_PATH"],
+
+      # Package name (from Appfile or can be specified here)
+      package_name: 'com.adiputrastwn.cleanandroidcompose'
+    )
+
+    UI.success("✅ Successfully deployed to Internal Testing track!")
+    UI.message("🚀 Your app is now available for internal testing on Google Play Console")
+  end
+
+  # ========================================
+  # DEPLOY TO ALPHA TESTING LANE
+  # ========================================
+  desc "Deploy AAB to Google Play Console - Alpha Track"
+  lane :deploy_alpha do |options|
+    build_aab(increment_version: options[:increment_version])
+
+    upload_to_play_store(
+      track: 'alpha',
+      aab: 'app/build/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_apk: true,
+      release_status: 'completed',
+      json_key: ENV["GOOGLE_PLAY_JSON_KEY_PATH"],
+      package_name: 'com.adiputrastwn.cleanandroidcompose'
+    )
+
+    UI.success("✅ Successfully deployed to Alpha track!")
+  end
+
+  # ========================================
+  # DEPLOY TO BETA TESTING LANE
+  # ========================================
+  desc "Deploy AAB to Google Play Console - Beta Track"
+  lane :deploy_beta do |options|
+    build_aab(increment_version: options[:increment_version])
+
+    upload_to_play_store(
+      track: 'beta',
+      aab: 'app/build/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_apk: true,
+      release_status: 'completed',
+      json_key: ENV["GOOGLE_PLAY_JSON_KEY_PATH"],
+      package_name: 'com.adiputrastwn.cleanandroidcompose'
+    )
+
+    UI.success("✅ Successfully deployed to Beta track!")
+  end
+
+  # ========================================
+  # DEPLOY TO PRODUCTION LANE
+  # ========================================
+  desc "Deploy AAB to Google Play Console - Production Track"
+  lane :deploy_production do |options|
+    # Ensure all quality checks pass before production deployment
+    code_quality
+    test
+
+    # Build the AAB
+    build_aab(increment_version: options[:increment_version])
+
+    # Upload to production
+    upload_to_play_store(
+      track: 'production',
+      aab: 'app/build/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_apk: true,
+      release_status: 'completed',
+      json_key: ENV["GOOGLE_PLAY_JSON_KEY_PATH"],
+      package_name: 'com.adiputrastwn.cleanandroidcompose',
+
+      # For production, you might want to start with a gradual rollout
+      # rollout: '0.1'  # Start with 10% rollout
+    )
+
+    UI.success("✅ Successfully deployed to Production!")
+    UI.important("⚠️  Don't forget to monitor crash reports and user feedback")
+  end
+
+  # ========================================
+  # PROMOTE TRACK LANE
+  # ========================================
+  desc "Promote a release from one track to another"
+  lane :promote do |options|
+    # Usage: fastlane promote from_track:internal to_track:beta
+    from_track = options[:from_track] || 'internal'
+    to_track = options[:to_track] || 'beta'
+
+    upload_to_play_store(
+      track: from_track,
+      track_promote_to: to_track,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      json_key: ENV["GOOGLE_PLAY_JSON_KEY_PATH"],
+      package_name: 'com.adiputrastwn.cleanandroidcompose'
+    )
+
+    UI.success("✅ Successfully promoted from #{from_track} to #{to_track}!")
+  end
+
+  # ========================================
+  # FULL CI LANE (for continuous integration)
+  # ========================================
+  desc "Complete CI pipeline: code quality + tests + build"
+  lane :ci do
+    UI.header("Starting CI Pipeline")
+
+    # Run code quality checks
+    code_quality
+
+    # Run tests
+    test
+
+    # Build both APK and AAB
+    build_apk
+    build_aab
+
+    UI.success("✅ CI Pipeline completed successfully!")
+  end
+
+  # ========================================
+  # FIREBASE APP DISTRIBUTION LANES
+  # ========================================
+
+  desc "Distribute debug APK to Firebase App Distribution"
+  lane :firebase_debug do |options|
+    # Build debug APK
+    gradle(
+      task: "assemble",
+      build_type: "Debug",
+      print_command: true
+    )
+
+    # Get release notes
+    release_notes = options[:release_notes] || ENV["FIREBASE_RELEASE_NOTES"] || "New debug build from Fastlane"
+
+    # Distribute to Firebase
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      service_credentials_file: ENV["FIREBASE_SERVICE_CREDENTIALS_FILE"],
+      groups: ENV["FIREBASE_GROUPS"],
+      testers: ENV["FIREBASE_TESTERS"],
+      release_notes: release_notes,
+      apk_path: "app/build/outputs/apk/debug/app-debug.apk",
+      android_artifact_type: "APK"
+    )
+
+    UI.success("✅ Debug APK distributed to Firebase App Distribution!")
+    UI.message("🔗 Testers will receive an email notification")
+  end
+
+  desc "Distribute release APK to Firebase App Distribution"
+  lane :firebase_release do |options|
+    # Build release APK with optional version increment
+    build_apk(increment_version: options[:increment_version])
+
+    # Get release notes
+    release_notes = options[:release_notes] || ENV["FIREBASE_RELEASE_NOTES"] || "New release build from Fastlane"
+
+    # Distribute to Firebase
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      service_credentials_file: ENV["FIREBASE_SERVICE_CREDENTIALS_FILE"],
+      groups: ENV["FIREBASE_GROUPS"],
+      testers: ENV["FIREBASE_TESTERS"],
+      release_notes: release_notes,
+      apk_path: "app/build/outputs/apk/release/app-release.apk",
+      android_artifact_type: "APK"
+    )
+
+    UI.success("✅ Release APK distributed to Firebase App Distribution!")
+    UI.message("🔗 Testers will receive an email notification")
+  end
+
+  desc "Distribute release AAB to Firebase App Distribution"
+  lane :firebase_aab do |options|
+    # Build release AAB with optional version increment
+    build_aab(increment_version: options[:increment_version])
+
+    # Get release notes
+    release_notes = options[:release_notes] || ENV["FIREBASE_RELEASE_NOTES"] || "New release AAB from Fastlane"
+
+    # Distribute to Firebase
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      service_credentials_file: ENV["FIREBASE_SERVICE_CREDENTIALS_FILE"],
+      groups: ENV["FIREBASE_GROUPS"],
+      testers: ENV["FIREBASE_TESTERS"],
+      release_notes: release_notes,
+      android_artifact_path: "app/build/outputs/bundle/release/app-release.aab",
+      android_artifact_type: "AAB"
+    )
+
+    UI.success("✅ Release AAB distributed to Firebase App Distribution!")
+    UI.message("🔗 Testers will receive an email notification")
+  end
+
+  desc "Distribute to Firebase with QA checks"
+  lane :firebase_qa do |options|
+    UI.header("Running QA checks before Firebase distribution")
+
+    # Run code quality checks
+    code_quality
+
+    # Run tests
+    test
+
+    # Distribute release APK
+    firebase_release(
+      increment_version: options[:increment_version],
+      release_notes: options[:release_notes]
+    )
+
+    UI.success("✅ QA checks passed and distributed to Firebase!")
+  end
+
+  # ========================================
+  # VERSION MANAGEMENT LANES
+  # ========================================
+
+  desc "Display current version information"
+  lane :version_info do
+    version_name = android_get_version_name(gradle_file: "app/build.gradle.kts")
+    version_code = android_get_version_code(gradle_file: "app/build.gradle.kts")
+
+    UI.header("📱 Current Version Information")
+    UI.success("Version Name: #{version_name}")
+    UI.success("Version Code: #{version_code}")
+    UI.message("Full Version: #{version_name} (#{version_code})")
+  end
+
+  desc "Increment version code by 1"
+  lane :bump_version_code do |options|
+    current_code = android_get_version_code(gradle_file: "app/build.gradle.kts")
+    new_code = current_code.to_i + 1
+
+    android_set_version_code(
+      version_code: new_code.to_s,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.success("✅ Version code bumped: #{current_code} → #{new_code}")
+  end
+
+  desc "Set version code to a specific value"
+  lane :set_version_code do |options|
+    unless options[:code]
+      UI.user_error!("❌ Please provide a version code. Usage: fastlane set_version_code code:42")
+    end
+
+    new_code = android_set_version_code(
+      version_code: options[:code].to_i,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.success("✅ Version code set to: #{new_code}")
+  end
+
+  desc "Increment version name (major, minor, or patch)"
+  lane :bump_version_name do |options|
+    current_name = android_get_version_name(gradle_file: "app/build.gradle.kts")
+    bump_type = options[:type] || "patch"
+
+    # Parse current version
+    version_parts = current_name.split('.').map(&:to_i)
+    major = version_parts[0] || 0
+    minor = version_parts[1] || 0
+    patch = version_parts[2] || 0
+
+    # Bump based on type
+    case bump_type
+    when "major"
+      major += 1
+      minor = 0
+      patch = 0
+    when "minor"
+      minor += 1
+      patch = 0
+    when "patch"
+      patch += 1
+    else
+      UI.user_error!("❌ Invalid bump type. Use: major, minor, or patch")
+    end
+
+    new_name = "#{major}.#{minor}.#{patch}"
+    android_set_version_name(
+      version_name: new_name,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.success("✅ Version name bumped (#{bump_type}): #{current_name} → #{new_name}")
+  end
+
+  desc "Set version name to a specific value"
+  lane :set_version_name do |options|
+    unless options[:name]
+      UI.user_error!("❌ Please provide a version name. Usage: fastlane set_version_name name:1.2.3")
+    end
+
+    new_name = android_set_version_name(
+      version_name: options[:name],
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.success("✅ Version name set to: #{new_name}")
+  end
+
+  desc "Set both version name and code"
+  lane :set_version do |options|
+    unless options[:name] && options[:code]
+      UI.user_error!("❌ Please provide both name and code. Usage: fastlane set_version name:1.2.3 code:42")
+    end
+
+    android_set_version_name(
+      version_name: options[:name],
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    android_set_version_code(
+      version_code: options[:code].to_i,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.success("✅ Version set to: #{options[:name]} (#{options[:code]})")
+  end
+
+  desc "Automatically increment both version name (patch) and version code"
+  lane :bump_version do |options|
+    bump_type = options[:type] || "patch"
+
+    # Increment version name
+    current_name = android_get_version_name(gradle_file: "app/build.gradle.kts")
+    version_parts = current_name.split('.').map(&:to_i)
+    major = version_parts[0] || 0
+    minor = version_parts[1] || 0
+    patch = version_parts[2] || 0
+
+    case bump_type
+    when "major"
+      major += 1
+      minor = 0
+      patch = 0
+    when "minor"
+      minor += 1
+      patch = 0
+    when "patch"
+      patch += 1
+    end
+
+    new_name = "#{major}.#{minor}.#{patch}"
+    android_set_version_name(
+      version_name: new_name,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    # Increment version code
+    current_code = android_get_version_code(gradle_file: "app/build.gradle.kts")
+    new_code_int = current_code.to_i + 1
+
+    android_set_version_code(
+      version_code: new_code_int.to_s,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.success("✅ Version bumped (#{bump_type}):")
+    UI.message("   Name: #{current_name} → #{new_name}")
+    UI.message("   Code: #{current_code} → #{new_code_int}")
+  end
+
+  # ========================================
+  # HELPER FUNCTIONS
+  # ========================================
+
+  # Legacy increment function (kept for backward compatibility)
+  # Prefer using bump_version_code lane instead
+  private_lane :increment_version_code_in_project_gradle do
+    current_code = android_get_version_code(gradle_file: "app/build.gradle.kts")
+    new_code_int = current_code.to_i + 1
+
+    android_set_version_code(
+      version_code: new_code_int.to_s,
+      gradle_file: "app/build.gradle.kts"
+    )
+
+    UI.message("📱 Version code incremented: #{current_code} → #{new_code_int}")
+  end
+
+  # Error handling for all lanes
+  error do |lane, exception|
+    UI.error("❌ Error in lane '#{lane}': #{exception.message}")
+    # You can add custom error handling here
+    # For example, send notifications to Slack, email, etc.
+  end
+end

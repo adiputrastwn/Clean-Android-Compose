@@ -1,0 +1,13 @@
+# Appfile - Contains app-specific configuration
+# This file defines the basic app identifiers used across all lanes
+
+# Package name of your Android application
+# This should match the applicationId in your app/build.gradle.kts
+package_name("com.adiputrastwn.cleanandroidcompose")
+
+# Path to the JSON key file for Google Play Console authentication
+# This can be overridden via environment variable SUPPLY_JSON_KEY_DATA or SUPPLY_JSON_KEY
+# By default, it looks for the path defined in .env file
+# Example: json_key_file(ENV["GOOGLE_PLAY_JSON_KEY_PATH"])
+# For security, we'll use environment variables instead of hardcoding the path
+json_key_file(ENV["GOOGLE_PLAY_JSON_KEY_PATH"]) if ENV["GOOGLE_PLAY_JSON_KEY_PATH"]

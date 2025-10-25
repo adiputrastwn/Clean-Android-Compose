@@ -185,3 +185,10 @@ fabric.properties
 !/gradle/wrapper/gradle-wrapper.jar
 
 # End of https://www.toptal.com/developers/gitignore/api/kotlin,android,androidstudio
+
+### Detekt ###
+# Detekt baseline file (should be committed to track existing violations)
+# config/detekt/baseline.xml
+
+# Detekt reports (generated during analysis)
+**/build/reports/detekt/

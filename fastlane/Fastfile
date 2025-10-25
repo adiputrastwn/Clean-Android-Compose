@@ -419,8 +419,10 @@ platform :android do
   desc "Increment version code by 1"
   lane :bump_version_code do |options|
     current_code = android_get_version_code(gradle_file: "app/build.gradle.kts")
-    new_code = android_set_version_code(
-      version_code: current_code + 1,
+    new_code = current_code.to_i + 1
+
+    android_set_version_code(
+      version_code: new_code.to_s,
       gradle_file: "app/build.gradle.kts"
     )
 
@@ -540,14 +542,16 @@ platform :android do
 
     # Increment version code
     current_code = android_get_version_code(gradle_file: "app/build.gradle.kts")
-    new_code = android_set_version_code(
-      version_code: current_code + 1,
+    new_code_int = current_code.to_i + 1
+
+    android_set_version_code(
+      version_code: new_code_int.to_s,
       gradle_file: "app/build.gradle.kts"
     )
 
     UI.success("✅ Version bumped (#{bump_type}):")
     UI.message("   Name: #{current_name} → #{new_name}")
-    UI.message("   Code: #{current_code} → #{new_code}")
+    UI.message("   Code: #{current_code} → #{new_code_int}")
   end
 
   # ========================================
@@ -558,12 +562,14 @@ platform :android do
   # Prefer using bump_version_code lane instead
   private_lane :increment_version_code_in_project_gradle do
     current_code = android_get_version_code(gradle_file: "app/build.gradle.kts")
-    new_code = android_set_version_code(
-      version_code: current_code + 1,
+    new_code_int = current_code.to_i + 1
+
+    android_set_version_code(
+      version_code: new_code_int.to_s,
       gradle_file: "app/build.gradle.kts"
     )
 
-    UI.message("📱 Version code incremented: #{current_code} → #{new_code}")
+    UI.message("📱 Version code incremented: #{current_code} → #{new_code_int}")
   end
 
   # Error handling for all lanes

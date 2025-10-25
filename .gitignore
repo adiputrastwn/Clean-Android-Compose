@@ -192,3 +192,43 @@ fabric.properties
 
 # Detekt reports (generated during analysis)
 **/build/reports/detekt/
+
+### Fastlane ###
+# Fastlane-specific files and directories
+
+# Environment files containing sensitive information
+fastlane/.env
+fastlane/.env.*
+!fastlane/.env.default
+
+# Fastlane reports and temporary files
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/README.md
+
+# Fastlane metadata (optional - commit this if you want to track Play Store metadata)
+# fastlane/metadata
+
+# Signing certificates and keys (NEVER commit these!)
+*.pem
+*.p12
+*.cer
+*.mobileprovision
+
+# Google Play Console service account JSON key
+google-play-service-account.json
+play-store-credentials.json
+*-service-account.json
+
+# App signing keys (additional patterns)
+*.pepk
+app/release/
+
+# Bundler/Ruby dependencies
+vendor/bundle/
+.bundle/
+
+# Gemfile.lock (some teams commit this, some don't - adjust as needed)
+# Gemfile.lock

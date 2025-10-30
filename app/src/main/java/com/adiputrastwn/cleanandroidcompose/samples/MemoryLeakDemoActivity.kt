@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -117,6 +118,7 @@ class MemoryLeakDemoActivity : ComponentActivity() {
                 Thread.sleep(60000) // Sleep for 60 seconds
                 Timber.d("Thread completed: ${this@MemoryLeakDemoActivity.javaClass.simpleName}")
             } catch (e: InterruptedException) {
+                e.printStackTrace()
                 Timber.d("Thread interrupted")
             }
         }.start()
@@ -174,7 +176,7 @@ private fun MemoryLeakDemoScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Divider(modifier = Modifier.padding(vertical = 8.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Leak buttons
         LeakButton(

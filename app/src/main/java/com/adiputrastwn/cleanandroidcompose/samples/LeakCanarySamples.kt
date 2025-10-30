@@ -115,7 +115,7 @@ class LeakCanarySampleActivity : ComponentActivity() {
         val customObject = CustomLeakyObject()
 
         // Manually watch an object that should be garbage collected
-        AppWatcher.objectWatcher.watch(
+        AppWatcher.objectWatcher.expectWeaklyReachable(
             watchedObject = customObject,
             description = "CustomLeakyObject instance"
         )
@@ -267,7 +267,7 @@ class ObjectWatcherExample {
 
         // Watch an object
         val myObject = Any()
-        objectWatcher.watch(
+        objectWatcher.expectWeaklyReachable(
             watchedObject = myObject,
             description = "My custom object that should be GC'd"
         )
@@ -281,7 +281,7 @@ class ObjectWatcherExample {
     fun watchWithCustomDescription() {
         val user = User("John Doe")
 
-        AppWatcher.objectWatcher.watch(
+        AppWatcher.objectWatcher.expectWeaklyReachable(
             watchedObject = user,
             description = "User object for ${user.name}"
         )

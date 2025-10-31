@@ -1,11 +1,20 @@
 package com.adiputrastwn.cleanandroidcompose.di
 
 import android.content.Context
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.disk.DiskCache
+import coil3.memory.MemoryCache
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.request.crossfade
+import coil3.util.DebugLogger
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
+import okio.Path.Companion.toOkioPath
 import javax.inject.Singleton
 
 /**
@@ -33,14 +42,53 @@ object AppModule {
         return context
     }
 
-    // Add more providers here as needed
-    // Example:
-    // @Provides
-    // @Singleton
-    // fun provideRetrofit(): Retrofit {
-    //     return Retrofit.Builder()
-    //         .baseUrl("https://api.example.com/")
-    //         .addConverterFactory(GsonConverterFactory.create())
-    //         .build()
-    // }
+    /**
+     * Provides OkHttpClient for Coil image loading.
+     * Can be customized with interceptors, timeout settings, etc.
+     */
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .build()
+    }
+
+    /**
+     * Provides ImageLoader for Coil image loading library.
+     * Configured with:
+     * - Memory cache for fast repeated access
+     * - Disk cache for offline access
+     * - Crossfade animation for smooth transitions
+     * - Debug logging in debug builds
+     * - OkHttp for network requests
+     */
+    @Provides
+    @Singleton
+    fun provideImageLoader(
+        @ApplicationContext context: Context,
+        okHttpClient: OkHttpClient
+    ): ImageLoader {
+        return ImageLoader.Builder(context)
+            .components {
+                add(OkHttpNetworkFetcherFactory(okHttpClient))
+            }
+            .memoryCache {
+                MemoryCache.Builder()
+                    .maxSizePercent(context, 0.10)
+                    .build()
+            }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(context.cacheDir.resolve("image_cache").toOkioPath())
+                    .maxSizeBytes(50 * 1024 * 1024) // 50 MB
+                    .build()
+            }
+            .crossfade(true)
+            .apply {
+                if (com.adiputrastwn.cleanandroidcompose.BuildConfig.DEBUG) {
+                    logger(DebugLogger())
+                }
+            }
+            .build()
+    }
 }

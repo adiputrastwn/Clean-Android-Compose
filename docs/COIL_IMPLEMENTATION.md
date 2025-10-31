@@ -217,7 +217,7 @@ You can adjust these values based on your app's specific needs:
 
 ### Created
 - `app/src/main/java/com/adiputrastwn/cleanandroidcompose/samples/ImageLoadingSamples.kt` - Comprehensive image loading examples
-- `COIL_IMPLEMENTATION.md` - This documentation file
+- `docs/COIL_IMPLEMENTATION.md` - This documentation file
 
 ## Next Steps
 

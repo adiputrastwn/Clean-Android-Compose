@@ -28,8 +28,8 @@ Successfully implemented LeakCanary memory leak detection with comprehensive sam
   - LeakCanary API usage examples
   - Anti-patterns and their fixes
 
-#### `README.md`
-- **Location**: `app/src/main/java/com/adiputrastwn/cleanandroidcompose/samples/`
+#### `LEAKCANARY_DEMO.md`
+- **Location**: `docs/`
 - **Purpose**: Complete documentation on using LeakCanary
 - **Sections**:
   - Quick start guide
@@ -184,8 +184,7 @@ LeakCanary is automatically initialized - no setup code needed!
 app/src/main/java/com/adiputrastwn/cleanandroidcompose/
 ├── samples/
 │   ├── MemoryLeakDemoActivity.kt     # Interactive demo activity
-│   ├── LeakCanarySamples.kt          # Documentation with examples
-│   └── README.md                      # Complete usage guide
+│   └── LeakCanarySamples.kt          # Documentation with examples
 ├── MainActivity.kt                    # Updated with navigation
 └── CleanAndroidComposeApp.kt         # Application class (Timber init)
 
@@ -197,6 +196,10 @@ app/
 
 gradle/
 └── libs.versions.toml                 # Version catalog
+
+docs/
+├── LEAKCANARY_IMPLEMENTATION.md       # Implementation summary
+└── LEAKCANARY_DEMO.md                 # Complete usage guide
 ```
 
 ## Testing the Implementation

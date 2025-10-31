@@ -1,4 +1,4 @@
-package com.adiputrastwn.cleanandroidcompose.samples
+package com.adiputrastwn.cleanandroidcompose.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

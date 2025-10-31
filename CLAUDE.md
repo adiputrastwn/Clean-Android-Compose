@@ -81,13 +81,17 @@ Key provided dependencies in `AppModule`:
 ```
 app/src/main/java/com/adiputrastwn/cleanandroidcompose/
 ├── CleanAndroidComposeApp.kt   # Application class with Hilt and Timber initialization
-├── MainActivity.kt              # Main Compose activity
+├── MainActivity.kt              # Main Compose activity with NavHost
 ├── di/                          # Dependency injection modules
 │   └── AppModule.kt            # Application-level dependencies
-├── ui/                          # UI components and theme
+├── navigation/                  # Navigation routes and graph
+│   └── AppNavigation.kt        # Type-safe navigation routes
+├── ui/                          # UI layer
+│   ├── screen/                 # Screen composables
+│   │   ├── HomeScreen.kt       # Home screen
+│   │   └── ImageLoadingSamplesScreen.kt # Image loading examples screen
 │   └── theme/                  # Material3 theme configuration
-└── samples/                     # Sample implementations and demos
-    ├── ImageLoadingSamples.kt  # Coil image loading examples
+└── samples/                     # Demo activities (non-Compose)
     ├── MemoryLeakDemoActivity.kt # LeakCanary demonstration
     └── LeakCanarySamples.kt    # Memory leak pattern documentation
 ```
@@ -115,6 +119,28 @@ LeakCanary 2.14 is automatically enabled in debug builds:
 - Interactive demo available in `MemoryLeakDemoActivity`
 
 See `docs/LEAKCANARY_DEMO.md` and `docs/LEAKCANARY_IMPLEMENTATION.md` for detailed information.
+
+### Navigation - Jetpack Navigation Compose
+Navigation Compose is configured with type-safe navigation using Kotlin Serialization:
+- **Navigation routes**: Defined in `app/src/main/java/com/adiputrastwn/cleanandroidcompose/navigation/AppNavigation.kt`
+- **Type-safe routing**: Uses `@Serializable` data classes/objects instead of string-based routes
+- **Main NavHost**: Configured in `MainActivity.kt` with `AppNavHost` composable
+- **Required plugins**: `kotlin.serialization` plugin enabled in `app/build.gradle.kts`
+
+Navigation pattern:
+```kotlin
+// Define route
+@Serializable
+object FeatureRoute
+
+// Navigate to route
+navController.navigate(FeatureRoute)
+
+// Setup destination
+composable<FeatureRoute> {
+    FeatureScreen()
+}
+```
 
 ## Fastlane Automation
 
@@ -196,6 +222,8 @@ Comprehensive documentation is available in the `docs/` directory:
 | Library | Version | Purpose |
 |---------|---------|---------|
 | Jetpack Compose | 2025.10.01 (BOM) | UI framework |
+| Navigation Compose | 1.0.0-beta01 | Type-safe navigation |
+| Kotlin Serialization | 1.7.3 | Serialization for navigation args |
 | Hilt | 2.57.2 | Dependency injection |
 | Coil | 3.3.0 | Image loading |
 | Timber | 5.0.1 | Logging |
@@ -229,10 +257,22 @@ Comprehensive documentation is available in the `docs/` directory:
    - Use `SubcomposeAsyncImage` for custom loading states
    - ImageLoader is automatically injected via Hilt
 
+6. **Navigation**:
+   - Define routes as `@Serializable` objects in `navigation/AppNavigation.kt`
+   - Add destinations to `AppNavHost` in `MainActivity.kt`
+   - Navigate using `navController.navigate(RouteObject)`
+   - Ensure `kotlin.serialization` plugin is enabled in module's `build.gradle.kts`
+
+7. **UI organization**:
+   - Place screen composables in `ui/screen/` package
+   - Name files as `[ScreenName]Screen.kt` (e.g., `HomeScreen.kt`, `ProfileScreen.kt`)
+   - Use `ui/components/` for reusable UI components (when needed)
+   - Keep theme-related files in `ui/theme/`
+
 ## Branch Strategy
 
 - **Main branch**: `master`
-- **Current branch**: `implement-coil-compose`
+- **Current branch**: `implement-compose-navigation`
 
 When creating PRs, target the `master` branch.
 

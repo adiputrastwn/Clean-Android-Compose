@@ -2,28 +2,22 @@ package com.adiputrastwn.cleanandroidcompose.navigation
 
 import kotlinx.serialization.Serializable
 
-/**
- * Type-safe navigation routes using Kotlin Serialization.
- * These data classes define the navigation destinations in the app.
- *
- * Navigation 3 uses @Serializable to create type-safe routes that
- * replace string-based navigation with compile-time checked routes.
- */
+sealed interface AppRoutes {
+    /**
+     * Home screen route - the main entry point of the app
+     */
+    @Serializable
+    data object HomeRoute : AppRoutes
 
-/**
- * Home screen route - the main entry point of the app
- */
-@Serializable
-object HomeRoute
+    /**
+     * Coil image loading samples screen route
+     */
+    @Serializable
+    data object ImageLoadingSamplesRoute : AppRoutes
 
-/**
- * Coil image loading samples screen route
- */
-@Serializable
-object ImageLoadingSamplesRoute
-
-/**
- * LeakCanary demo screen route
- */
-@Serializable
-object LeakCanaryDemoRoute
+    /**
+     * LeakCanary demo screen route
+     */
+    @Serializable
+    data object LeakCanaryDemoRoute : AppRoutes
+}

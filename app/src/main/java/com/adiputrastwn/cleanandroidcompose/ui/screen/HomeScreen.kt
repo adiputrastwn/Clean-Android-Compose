@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,7 +26,6 @@ import com.adiputrastwn.cleanandroidcompose.ui.theme.CleanAndroidComposeTheme
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onNavigateToImageSamples: () -> Unit = {},
-    onNavigateToLeakDemo: () -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -54,13 +52,6 @@ fun HomeScreen(
             Text("View Coil Image Loading Samples")
         }
 
-        // LeakCanary Demo
-        Button(
-            onClick = onNavigateToLeakDemo,
-            modifier = Modifier.fillMaxWidth(0.8f)
-        ) {
-            Text("Open LeakCanary Demo")
-        }
     }
 }
 

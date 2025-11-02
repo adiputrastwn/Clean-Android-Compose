@@ -15,9 +15,4 @@ sealed interface AppRoutes {
     @Serializable
     data object ImageLoadingSamplesRoute : AppRoutes
 
-    /**
-     * LeakCanary demo screen route
-     */
-    @Serializable
-    data object LeakCanaryDemoRoute : AppRoutes
 }

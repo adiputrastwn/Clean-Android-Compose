@@ -8,7 +8,6 @@ import androidx.navigation.compose.composable
 import com.adiputrastwn.cleanandroidcompose.navigation.AppRoutes
 import com.adiputrastwn.cleanandroidcompose.ui.screen.HomeScreen
 import com.adiputrastwn.cleanandroidcompose.ui.screen.ImageLoadingSamplesScreen
-import com.adiputrastwn.cleanandroidcompose.ui.screen.leakcanary.MemoryLeakDemoScreen
 
 @Composable
 fun AppNavHost(
@@ -25,9 +24,6 @@ fun AppNavHost(
             HomeScreen(
                 onNavigateToImageSamples = {
                     navController.navigate(AppRoutes.ImageLoadingSamplesRoute)
-                },
-                onNavigateToLeakDemo = {
-                    navController.navigate(AppRoutes.LeakCanaryDemoRoute)
                 }
             )
         }
@@ -35,11 +31,6 @@ fun AppNavHost(
         // Image loading samples destination
         composable<AppRoutes.ImageLoadingSamplesRoute> {
             ImageLoadingSamplesScreen()
-        }
-
-        // LeakCanaryDemo screen destination
-        composable<AppRoutes.LeakCanaryDemoRoute> {
-            MemoryLeakDemoScreen()
         }
     }
 }

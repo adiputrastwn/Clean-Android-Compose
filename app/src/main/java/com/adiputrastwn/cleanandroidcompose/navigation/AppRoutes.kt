@@ -14,5 +14,4 @@ sealed interface AppRoutes {
      */
     @Serializable
     data object ImageLoadingSamplesRoute : AppRoutes
-
 }

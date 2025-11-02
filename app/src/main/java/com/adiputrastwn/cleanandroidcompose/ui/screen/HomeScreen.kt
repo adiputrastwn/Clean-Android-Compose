@@ -51,7 +51,6 @@ fun HomeScreen(
         ) {
             Text("View Coil Image Loading Samples")
         }
-
     }
 }
 

@@ -69,18 +69,18 @@ Static code analysis is configured at the project level in `build.gradle.kts`:
 
 ### Dependency Injection - Hilt
 The project uses **Dagger Hilt** for dependency injection:
-- **Application class**: `CleanAndroidComposeApp` annotated with `@HiltAndroidApp`
+- **Application class**: `App` annotated with `@HiltAndroidApp`
 - **Module location**: `app/src/main/java/com/adiputrastwn/cleanandroidcompose/di/AppModule.kt`
 - **KSP configuration**: Includes necessary compiler arguments for Hilt
 
 Key provided dependencies in `AppModule`:
 - `OkHttpClient` - Singleton for network operations
-- `ImageLoader` (Coil) - Configured with memory cache (10% of available memory) and disk cache (50MB)
+- `ImageLoader` (Coil) - Configured with memory cache (10% of available memory) and disk cache (50MB), set as global instance via `SingletonImageLoader.Factory`
 
 ### Application Structure
 ```
 app/src/main/java/com/adiputrastwn/cleanandroidcompose/
-├── CleanAndroidComposeApp.kt   # Application class with Hilt and Timber initialization
+├── App.kt                       # Application class with Hilt, Timber, and Coil initialization
 ├── MainActivity.kt              # Main Compose activity with NavHost
 ├── di/                          # Dependency injection modules
 │   └── AppModule.kt            # Application-level dependencies
@@ -97,7 +97,7 @@ app/src/main/java/com/adiputrastwn/cleanandroidcompose/
 ```
 
 ### Logging - Timber
-Timber is initialized in `CleanAndroidComposeApp`:
+Timber is initialized in `App`:
 - Debug builds: `Timber.DebugTree()` planted automatically
 - Production: Placeholder for custom crash reporting tree
 - Usage: `Timber.d("message")`, `Timber.e(throwable, "message")`
@@ -109,6 +109,8 @@ Coil 3.3.0 is configured in `AppModule` with:
 - Disk cache: 50MB in `cache_dir/image_cache`
 - Crossfade animations enabled
 - Debug logging in debug builds
+
+The ImageLoader is injected into the `App` class via Hilt and set as Coil's global instance by implementing `SingletonImageLoader.Factory`. This means all `AsyncImage` and `SubcomposeAsyncImage` composables throughout the app automatically use the optimized, Hilt-configured ImageLoader without requiring explicit injection.
 
 See `docs/COIL_IMPLEMENTATION.md` for detailed usage examples.
 
@@ -255,7 +257,8 @@ Comprehensive documentation is available in the `docs/` directory:
 5. **Image loading**:
    - Use `AsyncImage` composable for basic loading
    - Use `SubcomposeAsyncImage` for custom loading states
-   - ImageLoader is automatically injected via Hilt
+   - Hilt-configured ImageLoader is automatically available globally via `SingletonImageLoader.Factory`
+   - No explicit injection needed in screens - all images benefit from optimized caching
 
 6. **Navigation**:
    - Define routes as `@Serializable` objects in `navigation/AppNavigation.kt`

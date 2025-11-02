@@ -2,7 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -30,10 +32,10 @@ android {
             )
         }
     }
-//    compileOptions {
-//        sourceCompatibility = JavaVersion.VERSION_21
-//        targetCompatibility = JavaVersion.VERSION_21
-//    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
     kotlin {
         jvmToolchain(21)
     }
@@ -41,11 +43,26 @@ android {
         compose = true
         buildConfig = true
     }
+    hilt {
+        enableAggregatingTask = false
+    }
 }
 
 // Configure KSP for Hilt with necessary compiler arguments
 ksp {
     arg("dagger.hilt.android.internal.disableAndroidSuperclassValidation", "true")
+}
+
+hilt {
+    // The Hilt configuration option 'enableTransformForLocalTests'
+    // is no longer necessary when com.android.tools.build:gradle:4.2.0+ is used.
+    // enableTransformForLocalTests = true
+    enableAggregatingTask = false
+
+    // see
+    // https://github.com/google/dagger/issues/1991
+    // https://github.com/google/dagger/issues/970
+    enableExperimentalClasspathAggregation = true
 }
 
 dependencies {
@@ -69,6 +86,10 @@ dependencies {
     // Coil image loading
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    // Navigation Compose with type-safe arguments
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
